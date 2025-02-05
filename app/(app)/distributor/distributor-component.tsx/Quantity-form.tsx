@@ -6,7 +6,8 @@ import {
   ActivityIndicator,
   Alert,
   TextInput,
-  Modal
+  Modal,
+  ScrollView
 } from 'react-native';
 import { styles } from '../styles/styles';
 import { Ionicons } from '@expo/vector-icons';
@@ -79,6 +80,7 @@ export const QuantityForm = React.memo(({
     };
   
     return (
+      <ScrollView>
       <View style={styles.partialPaymentForm}>
         <View style={styles.formHeader}>
           <Text style={styles.sectionTitle}>Update Quantities</Text>
@@ -86,7 +88,6 @@ export const QuantityForm = React.memo(({
             <Ionicons name="close" size={24} color="#000" />
           </TouchableOpacity>
         </View>
-  
         {localFormData.items.map((item, index) => (
           <View key={index} style={styles.formField}>
             <Text style={styles.fieldLabel}>{`Product ${item.productName}`}</Text>
@@ -122,6 +123,7 @@ export const QuantityForm = React.memo(({
           </TouchableOpacity>
         </View>
       </View>
+    </ScrollView>
     );
   });
 
