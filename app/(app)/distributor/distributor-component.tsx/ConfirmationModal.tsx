@@ -4,6 +4,8 @@ import {
   Text,
   TouchableOpacity,
   Modal,
+  ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
 import { styles } from '../styles/styles';
 
@@ -17,8 +19,12 @@ export const ConfirmationModal = React.memo(({
     status: string;
     onConfirm: () => void;
     onCancel: () => void;
-  }) => (
-    <Modal
+  }) => 
+    {
+    
+    
+      return (
+        <Modal
       animationType="fade"
       transparent={true}
       visible={visible}
@@ -41,4 +47,13 @@ export const ConfirmationModal = React.memo(({
         </View>
       </View>
     </Modal>
-  ));
+
+      )
+    })
+
+
+
+
+
+    
+  

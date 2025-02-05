@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -9,23 +9,27 @@ import {
   Alert,
   TextInput,
   Image,
-} from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { styles } from './styles/styles';
-import { ScrollView } from 'react-native-virtualized-view'
-import { Picker } from '@react-native-picker/picker';
-import axios from 'axios';
-import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { OrderCard } from './distributor-component.tsx/OrderCard';
-import { OrderItemsList } from './distributor-component.tsx/OrderItemsList';
-import { QuantityForm, QuantityUpdateConfirmationModal } from './distributor-component.tsx/Quantity-form';
-import { ConfirmationModal } from './distributor-component.tsx/ConfirmationModal';
-import { PartialPaymentForm } from './distributor-component.tsx/PartialPaymentForm';
-import { PartialPaymentConfirmationModal } from './distributor-component.tsx/PartialPaymentConfirmationModal';
-import { SafeAreaView } from 'react-native-safe-area-context';
+  StyleSheet,
+} from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import { styles } from "./styles/styles";
+import { ScrollView } from "react-native-virtualized-view";
+import { Picker } from "@react-native-picker/picker";
+import axios from "axios";
+import { Ionicons } from "@expo/vector-icons";
+import { Stack, useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { OrderCard } from "./distributor-component.tsx/OrderCard";
+import { OrderItemsList } from "./distributor-component.tsx/OrderItemsList";
+import {
+  QuantityForm,
+  QuantityUpdateConfirmationModal,
+} from "./distributor-component.tsx/Quantity-form";
+import { ConfirmationModal } from "./distributor-component.tsx/ConfirmationModal";
+import { PartialPaymentForm } from "./distributor-component.tsx/PartialPaymentForm";
+import { PartialPaymentConfirmationModal } from "./distributor-component.tsx/PartialPaymentConfirmationModal";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // Types
 interface OrderItem {
@@ -55,13 +59,10 @@ interface Order {
   deliveryDate: string;
   totalAmount: number;
   status: string;
-  // shopkeeper: Shopkeeper & {
-  //   balance?: number;
-  // };
   shopkeeper: Shopkeeper;
   items: OrderItem[];
   partialPayment?: PartialPayment;
-  paymentTerm: string
+  paymentTerm: string;
 }
 
 interface PartialPaymentForm {
@@ -80,28 +81,27 @@ interface QuantityForm {
 }
 
 const ORDER_STATUSES = {
-  PENDING: 'Pending',
-  CONFIRMED: 'Confirmed',
-  DELIVERED: 'Delivered',
-  CANCELED: 'Cancelled',
+  PENDING: "Pending",
+  CONFIRMED: "Confirmed",
+  DELIVERED: "Delivered",
+  CANCELED: "Cancelled",
 } as const;
 
 const PAYMENT_STATUSES = {
-  PENDING: 'pending',
-  PARTIAL: 'partial',
-  COMPLETED: 'completed',
+  PENDING: "pending",
+  PARTIAL: "partial",
+  COMPLETED: "completed",
 } as const;
-
 
 // Helper Functions
 const getStatusColor = (status: string) => {
   const colors = {
-    PENDING: '#FFA500',
-    CONFIRMED: '#FFA500',
-    DELIVERED: '#28A745',
-    CANCELED: '#DC3545',
+    PENDING: "#FFA500",
+    CONFIRMED: "#FFA500",
+    DELIVERED: "#28A745",
+    CANCELED: "#DC3545",
   };
-  return colors[status as keyof typeof colors] || '#000000';
+  return colors[status as keyof typeof colors] || "#000000";
 };
 
 const getStatusStyle = (status: string) => ({
@@ -113,42 +113,48 @@ const getStatusStyle = (status: string) => ({
 const DistributorOrdersScreen = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order>();
   const [modalVisible, setModalVisible] = useState(false);
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [deliveryDate, setDeliveryDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState("");
   const [updating, setUpdating] = useState(false);
-  const [startDate, setStartDate] = useState<string>('');
+  const [startDate, setStartDate] = useState<string>("");
   const [startPickerVisible, setStartPickerVisible] = useState(false);
   const [updatingPayment, setUpdatingPayment] = useState(false);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const router = useRouter();
   const [showImageUploadModal, setShowImageUploadModal] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false); // This state is used to show a loading spinner when the photo is being uploaded.
 
   // Partial Payment States
   const [showPartialPaymentForm, setShowPartialPaymentForm] = useState(false);
   const [showQtyChange, setShowQtyChange] = useState(false);
   const [qtyConfirmVisible, setQtyConfirmVisible] = useState(false);
-  const [partialPaymentConfirmVisible, setPartialPaymentConfirmVisible] = useState(false);
-  const [partialPaymentFormData, setPartialPaymentFormData] = useState<PartialPaymentForm | null>(null);
-  const [quantityFormData, setQuantityFormData] = useState<QuantityForm | null>(null);
+  const [partialPaymentConfirmVisible, setPartialPaymentConfirmVisible] =
+    useState(false);
+  const [partialPaymentFormData, setPartialPaymentFormData] =
+    useState<PartialPaymentForm | null>(null);
+  const [quantityFormData, setQuantityFormData] = useState<QuantityForm | null>(
+    null
+  );
 
   const handleShowPartialPayment = useCallback(() => {
     if (selectedOrder?.partialPayment) {
       setPartialPaymentFormData({
         initialAmount: selectedOrder.partialPayment.initialAmount.toString(),
-        remainingAmount: selectedOrder.partialPayment.remainingAmount.toString(),
+        remainingAmount:
+          selectedOrder.partialPayment.remainingAmount.toString(),
         dueDate: new Date(selectedOrder.partialPayment.dueDate),
         paymentStatus: selectedOrder.partialPayment.paymentStatus,
       });
     } else {
       setPartialPaymentFormData({
-        initialAmount: '',
-        remainingAmount: '',
+        initialAmount: "",
+        remainingAmount: "",
         dueDate: new Date(),
         paymentStatus: PAYMENT_STATUSES.PENDING,
       });
@@ -163,8 +169,8 @@ const DistributorOrdersScreen = () => {
       console.log("selected items", selectedOrder.items);
       const updatedItems = selectedOrder.items.map((item) => ({
         productName: item.productName,
-        productId: item.productId,        // Make sure productId is included
-        variantId: item.variantId,        // Make sure variantId is included
+        productId: item.productId, // Make sure productId is included
+        variantId: item.variantId, // Make sure variantId is included
         quantity: item.quantity,
         price: item.price,
       }));
@@ -172,34 +178,35 @@ const DistributorOrdersScreen = () => {
       // Set the state to store the items to update (this can be useful for the form)
       setQuantityFormData({ items: updatedItems });
     } else {
-      console.error('No items found in the order.');
+      console.error("No items found in the order.");
     }
 
     // Show the quantity change form
-    setShowQtyChange(true);
+    setShowQtyChange(true); // This will open the modal with the form to update the quantity.
   }, [selectedOrder]);
 
+  const handlePartialPaymentSubmit = useCallback(
+    (formData: PartialPaymentForm) => {
+      setPartialPaymentFormData(formData);
+      setPartialPaymentConfirmVisible(true);
+    },
+    []
+  );
 
-
-  const handlePartialPaymentSubmit = useCallback((formData: PartialPaymentForm) => {
-    setPartialPaymentFormData(formData);
-    setPartialPaymentConfirmVisible(true);
-  }, []);
   const handleQuantityChangeSubmit = useCallback((formData: QuantityForm) => {
     setQuantityFormData(formData);
     setQtyConfirmVisible(true);
   }, []);
 
-
   const handleStartDateChange = (event: any, selectedDate?: Date) => {
     setStartPickerVisible(false);
     if (selectedDate) {
-      setStartDate(selectedDate.toISOString().split('T')[0]);
+      setStartDate(selectedDate.toISOString().split("T")[0]);
     }
   };
   const filterOrdersByDate = () => {
     if (!startDate) {
-      Alert.alert('Warning', 'Please select the date.');
+      Alert.alert("Warning", "Please select the date.");
       return;
     }
 
@@ -228,16 +235,16 @@ const DistributorOrdersScreen = () => {
       setFilteredOrders(orders);
       return;
     }
-  
-    const filtered = orders.filter(order =>
+
+    const filtered = orders.filter((order) =>
       order.shopkeeper.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  
+
     setFilteredOrders(filtered);
   };
 
   const resetFilters = () => {
-    setStartDate('');
+    setStartDate("");
     setFilteredOrders(orders);
   };
 
@@ -246,7 +253,7 @@ const DistributorOrdersScreen = () => {
 
     setUpdatingPayment(true);
     try {
-      const token = await AsyncStorage.getItem('token');
+      const token = await AsyncStorage.getItem("token");
       const response = await axios.put(
         `${process.env.EXPO_PUBLIC_API_URL}/distributor/orders/${selectedOrder.id}/partial-payment`,
         {
@@ -261,23 +268,26 @@ const DistributorOrdersScreen = () => {
       );
 
       if (response.status === 200) {
-        Alert.alert('Success', 'Partial payment updated successfully!');
+        Alert.alert("Success", "Partial payment updated successfully!");
         await fetchOrders();
         setShowPartialPaymentForm(false);
         setPartialPaymentConfirmVisible(false);
         setPartialPaymentFormData(null);
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to update partial payment');
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to update partial payment"
+      );
     } finally {
       setUpdatingPayment(false);
     }
-  }, [selectedOrder, partialPaymentFormData,]);
+  }, [selectedOrder, partialPaymentFormData]);
 
   const fetchOrders = useCallback(async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const token = await AsyncStorage.getItem('token');
+      const token = await AsyncStorage.getItem("token");
       // Fetch orders
       const ordersResponse = await axios.get(
         `${process.env.EXPO_PUBLIC_API_URL}/distributor/get-orders`,
@@ -298,215 +308,243 @@ const DistributorOrdersScreen = () => {
       console.log("balancesResponse response: ", balancesResponse.data);
 
       // Map balances to orders
-      const ordersWithBalances = ordersResponse.data.orders.map((order: Order) => {
-        const shopkeeperBalance = balancesResponse.data.shopkeepers.find(
-          (s: any) => s.name === order.shopkeeper.name // Change this line to match by name
-        );
-        return {
-          ...order,
-          shopkeeper: {
-            ...order.shopkeeper,
-            balance: shopkeeperBalance?.totalBalance || 0,
-          },
-        };
-      });
+      const ordersWithBalances = ordersResponse.data.orders.map(
+        (order: Order) => {
+          const shopkeeperBalance = balancesResponse.data.shopkeepers.find(
+            (s: any) => s.name === order.shopkeeper.name // Change this line to match by name
+          );
+          return {
+            ...order,
+            shopkeeper: {
+              ...order.shopkeeper,
+              balance: shopkeeperBalance?.totalBalance || 0,
+            },
+          };
+        }
+      );
 
       //Check if orders are mapped properly
       // console.log("Orders with balances: ", ordersWithBalances);
 
       setOrders(ordersWithBalances);
       setFilteredOrders(ordersWithBalances);
-
     } catch (error: any) {
-      console.error('Failed to fetch orders:', error);
+      console.error("Failed to fetch orders:", error);
       Alert.alert(
-        'Error',
-        'Failed to fetch orders. Please check your connection and try again.'
+        "Error",
+        "Failed to fetch orders. Please check your connection and try again."
       );
     } finally {
       setLoading(false);
     }
   }, []);
 
-
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
 
-
-  const handleOrderPress = useCallback((order: Order) => {
-    setSelectedOrder(order);
-    setModalVisible(true);
-    setStatus(order.status);
-    setDeliveryDate(new Date(order.deliveryDate));
-  }, []);
+  useEffect(() => {
+    if (image) {
+      handleUpdatePhoto();
+    }
+  }, [image]);
 
   const handleStatusChange = useCallback((selectedStatus: string) => {
     setStatus(selectedStatus);
-    if(selectedStatus=="DELIVERED"){
+    if (selectedStatus == "DELIVERED") {
       setShowImageUploadModal(true);
     }
     setConfirmationVisible(true);
   }, []);
-  
-
 
   const handleImagePicker = async (useCamera: boolean) => {
-    const permissionMethod = useCamera 
-        ? ImagePicker.requestCameraPermissionsAsync 
-        : ImagePicker.requestMediaLibraryPermissionsAsync;
+    const permissionMethod = useCamera
+      ? ImagePicker.requestCameraPermissionsAsync
+      : ImagePicker.requestMediaLibraryPermissionsAsync;
 
     const { granted } = await permissionMethod();
     if (!granted) {
-        Alert.alert('Permission Required', `Permission to access ${useCamera ? 'camera' : 'media library'} is required!`);
-        return;
+      Alert.alert(
+        "Permission Required",
+        `Permission to access ${
+          useCamera ? "camera" : "media library"
+        } is required!`
+      );
+      return;
     }
 
-    const result = await (useCamera 
-        ? ImagePicker.launchCameraAsync
-        : ImagePicker.launchImageLibraryAsync)({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 1,
+    const result = await (useCamera
+      ? ImagePicker.launchCameraAsync
+      : ImagePicker.launchImageLibraryAsync)({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 1,
     });
 
     if (!result.canceled && result.assets[0].uri) {
-        setImage(result.assets[0].uri);
-        setShowImageUploadModal(false); // Close the modal after selecting an image
-        await handleUpdatePhoto(); // Call the photo update function
+      setImage(result.assets[0].uri);
+      setShowImageUploadModal(false); // Close the modal after selecting an image
+      // await handleUpdatePhoto(); // Call the photo update function, [update : Now it is called in useEffect]
     }
-};
+  };
 
-const handleUpdatePhoto = async () => {
-  console.log("API called");
+  const handleUpdatePhoto = async () => {
+    console.log("API called");
+    setPhotoUploading(true);
 
-  try {
-      const token = await AsyncStorage.getItem('token');
+    try {
+      const token = await AsyncStorage.getItem("token");
       if (!image) {
-          Alert.alert('Error', 'Please select an image of the shopkeeper.');
-          return;
+        Alert.alert("Error", "Please select an image of the shopkeeper.");
+        return;
       }
 
       const formDataToSend = new FormData();
 
       // Append image if exists
       if (image) {
-          const imageFileName = image.split('/').pop() || 'image.jpg';
-          const match = /\.(\w+)$/.exec(imageFileName);
-          const imageType = match ? `image/${match[1]}` : 'image/jpeg';
-          formDataToSend.append('file', {
-              uri: image,
-              name: imageFileName,
-              type: imageType,
-          } as any);
+        const imageFileName = image.split("/").pop() || "image.jpg";
+        const match = /\.(\w+)$/.exec(imageFileName);
+        const imageType = match ? `image/${match[1]}` : "image/jpeg";
+        formDataToSend.append("file", {
+          uri: image,
+          name: imageFileName,
+          type: imageType,
+        } as any);
 
-          // Make sure to replace :orderId with the actual order ID
-          const response = await axios.put(
-              `${process.env.EXPO_PUBLIC_API_URL}/distributor/orders/${selectedOrder?.id}/confirmation-photo`, // Use selectedOrder.id here
-              formDataToSend,
-              {
-                  headers: {
-                      'Accept': 'application/json',
-                      'Content-Type': 'multipart/form-data',
-                      'Authorization': `Bearer ${token}`,
-                  },
-              }
-          );
-
-          // Handle the response
-          if (response.status === 200) {
-              Alert.alert('Success', 'Photo uploaded successfully!');
-              // Optionally, you can refresh the orders or perform other actions here
-          } else {
-              Alert.alert('Error', 'Failed to upload photo. Please try again.');
+        // Make sure to replace :orderId with the actual order ID
+        const response = await axios.put(
+          `${process.env.EXPO_PUBLIC_API_URL}/distributor/orders/${selectedOrder?.id}/confirmation-photo`, // Use selectedOrder.id here
+          formDataToSend,
+          {
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${token}`,
+            },
           }
+        );
+
+        // Handle the response
+        if (response.status === 200) {
+          Alert.alert("Success", "Photo uploaded successfully!");
+          // Optionally, you can refresh the orders or perform other actions here
+        } else {
+          Alert.alert("Error", "Failed to upload photo. Please try again.");
+        }
       }
-  } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to upload photo');
-      console.error('Error uploading photo:', error);
-  }
-};
-const handleUpdateOrder = useCallback(async () => {
-  if (!selectedOrder) return;
-
-  setUpdating(true);
-  try {
-    const token = await AsyncStorage.getItem('token');
-    
-    // Prepare the payload
-    const payload = {
-      status,
-      deliveryDate: deliveryDate.toISOString(),
-    };
-
-    const response = await axios.put(
-      `${process.env.EXPO_PUBLIC_API_URL}/distributor/orders/${selectedOrder.id}`,
-      payload,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-
-    if (response.status === 200) {
-      console.log(response.data);
-      Alert.alert('Success', 'Order updated successfully!');
-      await fetchOrders();
-      setModalVisible(false);
-      setConfirmationVisible(false);
+    } catch (error: any) {
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to upload photo"
+      );
+      console.error("Error uploading photo:", error);
+    } finally {
+      setPhotoUploading(false);
     }
-  } catch (error: any) {
-    Alert.alert('Error', error.response?.data?.message || 'Failed to update order');
-  } finally {
-    setUpdating(false);
-  }
-}, [selectedOrder, status, deliveryDate, fetchOrders]);
+  };
+  const handleUpdateOrder = useCallback(async () => {
+    if (!selectedOrder) return;
 
-const handleQtyChange = useCallback(async () => {
-  if (!selectedOrder || !quantityFormData) return;
+    setUpdating(true);
+    try {
+      const token = await AsyncStorage.getItem("token");
 
-  setUpdating(true);  // Show loading spinner or indicator
+      // Prepare the payload
+      const payload = {
+        status,
+        deliveryDate: deliveryDate.toISOString(),
+      };
 
-  // Map the items from the form data, ensuring productId, variantId, and quantity are included
-  const updatedItems = quantityFormData.items.map((item) => ({
-    productId: item.productId,  // Ensure this is set
-    variantId: item.variantId || null,  // Ensure this is set
-    quantity: item.quantity,    // The updated quantity from form data
-  }));
+      const response = await axios.put(
+        `${process.env.EXPO_PUBLIC_API_URL}/distributor/orders/${selectedOrder.id}`,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-  try {
-    const token = await AsyncStorage.getItem('token');
-
-    // Prepare the payload
-    const payload = {
-      items: updatedItems,  // Send the updated quantities of items
-    };
-
-    const response = await axios.put(
-      `${process.env.EXPO_PUBLIC_API_URL}/distributor/orders/${selectedOrder.id}`,
-      payload,
-      {
-        headers: { Authorization: `Bearer ${token}` },
+      if (response.status === 200) {
+        console.log(response.data);
+        Alert.alert("Success", "Order updated successfully!");
+        await fetchOrders();
+        setModalVisible(false);
+        setConfirmationVisible(false);
       }
-    );
-
-    if (response.status === 200) {
-      Alert.alert('Success', 'Order items updated successfully!');
-      await fetchOrders();  // Refresh orders after update
-      setShowQtyChange(false);  // Close the modal
-      setQtyConfirmVisible(false);  // Hide confirmation if applicable
+    } catch (error: any) {
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to update order"
+      );
+    } finally {
+      setUpdating(false);
     }
-  } catch (error: any) {
-    console.log(error);
-    Alert.alert('Error', error.response?.data?.message || 'Failed to update order items');
-  } finally {
-    setUpdating(false);  // Hide loading indicator
-  }
-}, [selectedOrder, quantityFormData, fetchOrders]);
+  }, [selectedOrder, status, deliveryDate, fetchOrders]);
+
+  const handleQtyChange = useCallback(async () => {
+    if (!selectedOrder || !quantityFormData) return;
+
+    setUpdating(true); // Show loading spinner or indicator
+
+    // Map the items from the form data, ensuring productId, variantId, and quantity are included
+    const updatedItems = quantityFormData.items.map((item) => ({
+      productId: item.productId, // Ensure this is set
+      variantId: item.variantId, // Ensure this is set
+      quantity: item.quantity, // The updated quantity from form data
+    }));
+
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      // Prepare the payload
+      const payload = {
+        items: updatedItems, // Send the updated quantities of items
+      };
+
+      const response = await axios.put(
+        `${process.env.EXPO_PUBLIC_API_URL}/distributor/orders/${selectedOrder.id}`,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.status === 200) {
+        Alert.alert("Success", "Order items updated successfully!");
+        await fetchOrders(); // Refresh orders after update
+        setShowQtyChange(false); // Close the modal
+        setQtyConfirmVisible(false); // Hide confirmation if applicable
+        // Here I am updating the selected order with the new quantities because this will only cause the main modal(OrderDetail) to re-render with the new quantities.
+        setSelectedOrder((prev: any) => {
+          if (!prev) return undefined;
+          else {
+            return {
+              ...prev,
+              items: [...prev.items].map((item: any, index: number) => {
+                return {
+                  ...item,
+                  quantity: quantityFormData?.items[index].quantity,
+                };
+              }),
+            };
+          }
+        });
+      }
+    } catch (error: any) {
+      console.log(error);
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to update order items"
+      );
+    } finally {
+      setUpdating(false); // Hide loading indicator
+    }
+  }, [selectedOrder, quantityFormData, fetchOrders]);
   // const sortedOrders = useMemo(() => {
   //   return [...orders].sort((a, b) => {
   //     // Sort by status priority (Pending > Delivered > Cancelled)
   //     const statusPriority = { PENDING: 0, DELIVERED: 1, CANCELED: 2 };
-  //     const statusDiff = statusPriority[a.status as keyof typeof statusPriority] - 
+  //     const statusDiff = statusPriority[a.status as keyof typeof statusPriority] -
   //                       statusPriority[b.status as keyof typeof statusPriority];
 
   //     if (statusDiff !== 0) return statusDiff;
@@ -516,9 +554,18 @@ const handleQtyChange = useCallback(async () => {
   //   });
   // }, [orders]);
 
-  const renderOrderItem = useCallback(({ item }: { item: Order }) => (
-    <OrderCard item={item} onPress={handleOrderPress} />
-  ), [handleOrderPress]);
+  const handleOrderPress = useCallback((order: Order) => {
+    setSelectedOrder(order);
+    setModalVisible(true);
+    setStatus(order.status);
+    setDeliveryDate(new Date(order.deliveryDate));
+  }, []);
+  const renderOrderCards = useCallback(
+    ({ item }: { item: Order }) => (
+      <OrderCard item={item} onPress={handleOrderPress} />
+    ),
+    [handleOrderPress]
+  );
 
   if (loading) {
     return (
@@ -530,10 +577,9 @@ const handleQtyChange = useCallback(async () => {
 
   return (
     <SafeAreaView style={styles.container}>
-
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.replace('/(app)/distributor/dashboard')}
+          onPress={() => router.replace("/(app)/distributor/dashboard")}
           style={styles.backButton}
         >
           <Ionicons name="arrow-back" size={24} color="#000" />
@@ -582,19 +628,20 @@ const handleQtyChange = useCallback(async () => {
         />
       )}
       <View style={styles.searchContainer}>
-  <TextInput
-    style={styles.searchInput}
-    placeholder="Search by Shopkeeper Name"
-    value={searchQuery}
-    onChangeText={text => {
-      setSearchQuery(text);
-      filterOrdersByShopkeeper(); // Call the filter function on text change
-    }}
-  />
-</View>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by Shopkeeper Name"
+          value={searchQuery}
+          onChangeText={(text) => {
+            setSearchQuery(text);
+            filterOrdersByShopkeeper(); // Call the filter function on text change
+          }}
+        />
+      </View>
+
       <FlatList
         data={filteredOrders}
-        renderItem={renderOrderItem}
+        renderItem={renderOrderCards}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
         refreshing={loading}
@@ -636,7 +683,7 @@ const handleQtyChange = useCallback(async () => {
                 <OrderItemsList items={selectedOrder?.items || []} />
                 <TouchableOpacity
                   style={styles.partialPaymentButton}
-                  onPress={handleUpdateQty}
+                  onPress={handleUpdateQty} // This will just open a model to update the quantity and will select all the items in that order.
                 >
                   <Text style={styles.buttonText}>Update Quantity Change</Text>
                 </TouchableOpacity>
@@ -689,7 +736,9 @@ const handleQtyChange = useCallback(async () => {
                       style={styles.partialPaymentButton}
                       onPress={handleShowPartialPayment}
                     >
-                      <Text style={styles.buttonText}>Update Partial Payment</Text>
+                      <Text style={styles.buttonText}>
+                        Update Partial Payment
+                      </Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -699,12 +748,22 @@ const handleQtyChange = useCallback(async () => {
         </View>
       </Modal>
 
-      <ConfirmationModal
+{ photoUploading ? (
+      
+      <View style={styleIndicator.container}>
+         <ActivityIndicator size="large" color="red" />
+      </View>
+      ) : (
+        <ConfirmationModal
         visible={confirmationVisible}
         status={ORDER_STATUSES[status as keyof typeof ORDER_STATUSES]}
         onConfirm={handleUpdateOrder}
         onCancel={() => setConfirmationVisible(false)}
       />
+
+      )
+    }
+      
 
       {showPartialPaymentForm && partialPaymentFormData && (
         <Modal
@@ -749,26 +808,32 @@ const handleQtyChange = useCallback(async () => {
         </Modal>
       )}
       <Modal
-    animationType="slide"
-    transparent={true}
-    visible={showImageUploadModal}
-    onRequestClose={() => setShowImageUploadModal(false)}
->
-    <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
+        animationType="slide"
+        transparent={true}
+        visible={showImageUploadModal}
+        onRequestClose={() => setShowImageUploadModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Upload Confirmation Photo</Text>
-            <TouchableOpacity onPress={() => handleImagePicker(true)} style={styles.partialPaymentButton}>
-                <Text style={styles.buttonText}>Take Photo</Text>
+            <TouchableOpacity
+              onPress={() => handleImagePicker(true)}
+              style={styles.partialPaymentButton}
+            >
+              <Text style={styles.buttonText}>Take Photo</Text>
             </TouchableOpacity>
             {/* <TouchableOpacity onPress={() => handleImagePicker(false)}>
                 <Text style={styles.buttonText2}>Choose from Gallery</Text>
             </TouchableOpacity> */}
-            <TouchableOpacity onPress={() => setShowImageUploadModal(false)} style={styles.partialPaymentButton}>
-                <Text style={styles.buttonText}>Cancel</Text>
+            <TouchableOpacity
+              onPress={() => setShowImageUploadModal(false)}
+              style={styles.partialPaymentButton}
+            >
+              <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
+          </View>
         </View>
-    </View>
-</Modal>
+      </Modal>
 
       <QuantityUpdateConfirmationModal
         visible={qtyConfirmVisible}
@@ -788,3 +853,17 @@ const handleQtyChange = useCallback(async () => {
 };
 
 export default DistributorOrdersScreen;
+
+
+
+const styleIndicator = StyleSheet.create({
+  container: {
+    flex: 1, // Takes full screen height and width
+    height: '100%', // Optional: Set height to full screen
+    width: '100%', // Optional: Set height to full screen
+    justifyContent: 'center', // Centers vertically
+    alignItems: 'center', // Centers horizontally
+    backgroundColor: 'rgba(203, 20, 20, 0.8)', // Optional: Light overlay
+    zIndex: 10, // Optional: Make sure it's above everything
+  },
+});

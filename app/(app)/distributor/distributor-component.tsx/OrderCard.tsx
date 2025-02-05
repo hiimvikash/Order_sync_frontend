@@ -89,7 +89,7 @@ export const OrderCard = React.memo(({ item, onPress }: OrderItemProps) => {
         {item.partialPayment && (
     <>
       <Text style={styles.orderDetail}>Advance Amount: ₹{item.partialPayment.initialAmount.toLocaleString()}</Text>
-      <Text style={styles.orderDetail}>Partial payment Balance Amount: ₹{item.partialPayment.remainingAmount.toLocaleString()}</Text>
+      <Text style={[styles.orderDetail, { fontWeight: 'bold', color : 'red' }]}>Partial payment Balance Amount: ₹{item.partialPayment.remainingAmount.toLocaleString()}</Text>
       <Text style={styles.orderDetail}>Payment Status: {item.partialPayment.paymentStatus}</Text>
     </>
   )}

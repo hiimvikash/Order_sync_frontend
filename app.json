@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Order Sync",
-    "slug": "salesApp",
+    "slug": "salesapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -49,8 +49,12 @@
     },
     "extra": {
       "eas": {
-        "projectId": "b53a242f-dd65-46cd-85f0-8edef8dabe54"
+        "projectId": "50155902-c119-4ce2-8ec1-ddad8371c8c8"
+      },
+      "router": {
+        "origin": false
       }
-    }
+    },
+    "owner": "needibay"
   }
 }

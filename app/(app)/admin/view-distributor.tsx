@@ -130,7 +130,7 @@ const ViewDistributor = () => {
       />
 
       {/* Add Distributor Button */}
-      <TouchableOpacity style={styles.addButton}>
+      <TouchableOpacity style={styles.addButton} onPress={() => router.replace("/(app)/admin/create-distributor")}>
         <Text style={styles.addButtonText}>Add Distributor</Text>
       </TouchableOpacity>
 

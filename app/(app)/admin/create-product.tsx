@@ -312,7 +312,7 @@ const CreateProductForm = () => {
             style={styles.picker}
           >
             <Picker.Item label="Select Category" value="" />
-            {categories.map((category) => (
+            {categories.sort((a, b) => a.name.localeCompare(b.name)).map((category) => (
               <Picker.Item
                 key={category.id}
                 label={category.name}
