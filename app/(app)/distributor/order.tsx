@@ -500,6 +500,7 @@ const DistributorOrdersScreen = () => {
       const payload = {
         items: updatedItems, // Send the updated quantities of items
       };
+      console.log("payload", payload);
 
       const response = await axios.put(
         `${process.env.EXPO_PUBLIC_API_URL}/distributor/orders/${selectedOrder.id}`,

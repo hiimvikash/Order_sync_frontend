@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Alert,
   TextInput,
+  ScrollView,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -57,6 +58,7 @@ export const PartialPaymentForm = React.memo(({
     };
   
     return (
+      <ScrollView>
       <View style={styles.partialPaymentForm}>
         <View style={styles.formHeader}>
           <Text style={styles.sectionTitle}>Update Partial Payment</Text>
@@ -150,5 +152,6 @@ export const PartialPaymentForm = React.memo(({
           </TouchableOpacity>
         </View>
       </View>
+      </ScrollView>
     );
   });

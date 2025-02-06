@@ -72,8 +72,8 @@ export const QuantityForm = React.memo(({
   
     const handleSubmit = () => {
       // Ensure all items have valid quantities
-      if (!localFormData.items || localFormData.items.some(item => item.quantity <= 0)) {
-        Alert.alert('Error', 'Please ensure all quantities are greater than 0');
+      if (!localFormData.items || localFormData.items.some(item => item.quantity < 0)) {
+        Alert.alert('Error', 'Quantity must be a positive number');
         return;
       }
       onUpdate(localFormData);  // Call the onUpdate function passed as a prop
