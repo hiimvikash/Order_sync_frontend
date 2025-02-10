@@ -83,7 +83,7 @@ const buttonCategories: CategoryData[] = [
         icon: 'business',
       },
       {
-        label: 'Products Inventory',
+        label: 'Products',
         description: 'View and edit product inventory',
         action: 'view-products',
         icon: 'cube',

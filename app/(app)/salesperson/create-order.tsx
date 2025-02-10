@@ -28,6 +28,7 @@ interface OrderItem {
   productId: string;
   quantity: number;
   variantId?: string;
+  variantValue?: string;
   productName: string;
   price: number;
   variantName?: string;
@@ -258,6 +259,7 @@ const CreateOrder = () => {
         ]);
         setCategory(categoryRes.data);
         setProducts(productsRes.data);
+        console.log(productsRes.data[0].variants);
 
       setShopkeepers(shopkeepersRes.data);
       setDistributors(distributorsRes.data);
@@ -378,6 +380,7 @@ const CreateOrder = () => {
     const newItem: OrderItem = {
       productId: selectedProduct.id,
       quantity,
+      variantValue: selectedVariantObj?.variantValue,
       variantId: selectedVariant || undefined,
       productName: selectedProduct.name,
       price,
@@ -560,7 +563,7 @@ const CreateOrder = () => {
                       <Text style={styles.itemName}>{item.productName}</Text>
                       {item.variantName && (
                         <Text style={styles.variantName}>
-                          Variant: {item.variantName}
+                          Variant: {item.variantName} : {item.variantValue}
                         </Text>
                       )}
                       <Text style={styles.itemPrice}>
@@ -772,7 +775,7 @@ const CreateOrder = () => {
                 <Text style={styles.itemName}>{item.productName}</Text>
                 {item.variantName && (
                   <Text style={styles.variantName}>
-                    Variant: {item.variantName}
+                   Variant: {item.variantName} : {item.variantValue}
                   </Text>
                 )}
                 <Text style={styles.itemPrice}>

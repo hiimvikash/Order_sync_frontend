@@ -29,9 +29,8 @@ interface PartialPaymentForm {
 
 
 const PAYMENT_STATUSES = {
-  PENDING: 'pending',
-  PARTIAL: 'partial',
-  COMPLETED: 'completed',
+  PENDING: 'PENDING',
+  COMPLETED: 'PAID',
 } as const;
 export const PartialPaymentForm = React.memo(({ 
     partialPayment,
