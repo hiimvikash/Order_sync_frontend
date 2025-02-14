@@ -24,7 +24,8 @@ type ButtonAction =
   | 'view-distributor'
   | 'view-products'
   | 'view-salespersons'
-  | 'view-shops';
+  | 'view-shops'
+  | 'inventory-management';
 
 interface ButtonData {
   label: string;
@@ -64,6 +65,7 @@ const buttonCategories: CategoryData[] = [
         action: 'create-product',
         icon: 'cube',
       },
+      
     ],
   },
   {
@@ -99,6 +101,12 @@ const buttonCategories: CategoryData[] = [
         description: 'View all registered shops',
         action: 'view-shops',
         icon: 'storefront',
+      },
+      {
+        label: 'Inventory Management',
+        description: 'Manage product inventory',
+        action: 'inventory-management',
+        icon: 'pie-chart',
       },
     ],
   },

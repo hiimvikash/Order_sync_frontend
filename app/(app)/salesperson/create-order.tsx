@@ -478,6 +478,7 @@ const CreateOrder = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleConfirm = async () => {
+      
       if (formData.paymentTerm === "") {
         Alert.alert("Please select Payment term");
         return;

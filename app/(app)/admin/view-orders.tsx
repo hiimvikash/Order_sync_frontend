@@ -57,14 +57,14 @@ type PartialPayment = {
 
 const OrderList = () => {
   const router = useRouter();
-  const [startPickerVisible, setStartPickerVisible] = useState(false);
-  const [endPickerVisible, setEndPickerVisible] = useState(false);
   const [ordersData, setOrdersData] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [startPickerVisible, setStartPickerVisible] = useState(false);
+  const [endPickerVisible, setEndPickerVisible] = useState(false);
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
 
