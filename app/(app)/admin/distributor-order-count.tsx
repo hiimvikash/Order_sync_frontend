@@ -386,6 +386,12 @@ const DistributorOrderCount = memo(() => {
                     <Text style={styles.stock}>{String(order)}</Text>
                   </View>
                 )}
+
+
+
+
+      
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -394,6 +400,8 @@ const DistributorOrderCount = memo(() => {
 export default DistributorOrderCount;
 
 const styles = StyleSheet.create({
+
+  
     containery: {
         backgroundColor: "#f8f9fa",
         padding: 16,

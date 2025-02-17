@@ -290,9 +290,9 @@ const ShopList = () => {
                       View Location
                     </Text>
                   </TouchableOpacity>
-
+  
                   <View style={styles.modalDetailRow}>
-                    <Ionicons name="time" size={20} color="#666" />
+                    <Ionicons name="alarm" size={20} color="#666" />
                     <Text style={styles.modalDetailText}>
                       {selectedShop.preferredDeliverySlot}
                     </Text>
@@ -301,6 +301,12 @@ const ShopList = () => {
                     <Ionicons name="star" size={20} color="#666" />
                     <Text style={styles.modalDetailText}>
                       Onboarded By : {selectedShop.salesperson?.name}
+                    </Text>
+                  </View>
+                  <View style={styles.modalDetailRow}>
+                    <Ionicons name="time" size={20} color="#666" />
+                    <Text style={styles.modalDetailText}>
+                      Onboarded @ : {new Date(selectedShop.createdAt).toLocaleString()}
                     </Text>
                   </View>
                 </View>

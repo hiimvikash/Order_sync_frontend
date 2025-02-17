@@ -16,7 +16,8 @@ interface ButtonData {
   | 'modify-product-inventory'
   | 'create-distributor-order'
   | 'view-inventory'
-  | 'distributor-order-count';
+  | 'distributor-order-count'
+  | 'export-all';
 
  const butts : ButtonData[] = [
     {
@@ -43,6 +44,12 @@ interface ButtonData {
       description: 'Total quantity ordered for the selected product',
       action: 'distributor-order-count',
       icon: 'logo-apple-ar',
+    },
+    {
+      label: 'Export All',
+      description: 'Export all your inventory data & orders',
+      action: 'export-all',
+      icon: 'download',
     }
   ]
   
