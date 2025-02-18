@@ -45,15 +45,15 @@ type Order = {
   partialPayment: PartialPayment | null; // Add this line
   paymentStatus: string; // Add this line
 };
-type PartialPayment = {
-  id: number;
-  initialAmount: number;
-  remainingAmount: number;
-  dueDate: string;
-  paymentStatus: string;
-  createdAt: string;
-  updatedAt: string;
-};
+  type PartialPayment = {
+    id: number;
+    initialAmount: number;
+    remainingAmount: number;
+    dueDate: string;
+    paymentStatus: string;
+    createdAt: string;
+    updatedAt: string;
+  };
 
 const OrderList = () => {
   const router = useRouter();
@@ -113,14 +113,14 @@ const OrderList = () => {
     }
   }, []);
 
+  
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchOrders();
     setRefreshing(false);
-  }, [fetchOrders]);
-
-  useEffect(() => {
-    fetchOrders();
   }, [fetchOrders]);
 
   const filterOrdersByDate = () => {
