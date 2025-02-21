@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   SafeAreaView,
   Modal,
   Alert,
+  TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -34,6 +36,11 @@ const ViewSalesperson = () => {
   const [salespeople, setSalespeople] = useState<Salesperson[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedSalesperson, setSelectedSalesperson] = useState<Salesperson | null>(null);
+
+  const [emodalVisible, setEmodalVisible] = useState(false);
+  const [formData, setFormData] = useState<Partial<Salesperson>>({});
+
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchSalespeople();
@@ -88,6 +95,46 @@ const ViewSalesperson = () => {
     );
   };
 
+  const handleEditSalespersonSubmit = useCallback(async () => {
+    if (!selectedSalesperson) return;
+  
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem("token");
+      
+      // Get only the updated fields
+      const updatedFields = Object.entries(formData).reduce(
+        (acc, [key, value]) => {
+          if (value !== selectedSalesperson[key as keyof Salesperson]) {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {} as Record<string, any>
+      );
+  
+      if (Object.keys(updatedFields).length === 0) {
+        Alert.alert("No Changes", "No changes were made to the distributor.");
+        return;
+      }
+  
+      await axios.put(
+        `${process.env.EXPO_PUBLIC_API_URL}/admin/salesperson/${selectedSalesperson.id}`,
+        updatedFields,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+  
+      await fetchSalespeople();
+      Alert.alert("Success", "Distributor updated successfully");
+      setModalVisible(false);
+    } catch (error) {
+      Alert.alert("Error", "Failed to update distributor. Please try again.");
+    } finally {
+      setLoading(false);
+      setEmodalVisible(false);
+    }
+  }, [selectedSalesperson, formData, fetchSalespeople]);
+
   const renderSalespersonItem = useCallback(({ item }: { item: Salesperson }) => (
     <View style={styles.card}>
       <TouchableOpacity onPress={() => openModal(item)}>
@@ -96,7 +143,7 @@ const ViewSalesperson = () => {
         <Text style={styles.detail}>Email: {item.email}</Text>
       </TouchableOpacity>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.editButton} onPress={() =>handleDelete(item.id)}>
+        <TouchableOpacity style={styles.editButton} onPress={()=>{setSelectedSalesperson(item); setEmodalVisible(true); setFormData(item)}}>
           <Text style={styles.buttonText}>Edit</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item.id)}>
@@ -157,11 +204,180 @@ const ViewSalesperson = () => {
           </View>
         </Modal>
       )}
+
+
+      <Modal
+            animationType="slide"
+            transparent={true}
+            visible={emodalVisible}
+            onRequestClose={() => setEmodalVisible(false)}
+          >
+      
+            <View style={styles.emodalContainer}>
+              <View style={styles.emodalContent}>
+                {/* Modal Header */}
+                <View style={styles.emodalHeader}>
+                  <Text style={styles.emodalTitle}>Edit Distributor</Text>
+                  <TouchableOpacity
+                    onPress={() => setEmodalVisible(false)}
+                    style={styles.ecloseButton}
+                  >
+                    <Ionicons name="close" size={24} color="#000" />
+                  </TouchableOpacity>
+                </View>
+      
+                {/* Loading Indicator or Edit Form */}
+      {loading ? (
+                    <ActivityIndicator size="large" color="#007AFF" />
+                  ):(
+                  <EditSalespersonForm
+                    formData={formData}
+                    setFormData={setFormData}
+                    onSubmit={handleEditSalespersonSubmit}
+                  />
+                  )}
+              </View>
+            </View>
+          </Modal>
     </SafeAreaView>
   );
 };
 
+
+const EditSalespersonForm = memo(
+  ({
+    formData,
+    setFormData,
+    onSubmit,
+  }: {
+    formData: Partial<Salesperson>;
+    setFormData: (data: Partial<Salesperson>) => void;
+    onSubmit: () => void;
+  }) => (
+    <View style={styles.editFormContainer}>
+      {Object.entries({
+        name: { label: "Salesperson Name", type: "text", icon: "person-outline" },
+        address: { label: "Address", type: "text", icon: "location-outline" },
+        phoneNumber: { label: "Phone Number", type: "numeric", icon: "call-outline" },
+        gstNumber: { label: "GST Number", type: "text", icon: "receipt-outline" },
+        pan: { label: "PAN Number", type: "text", icon: "card-outline" },
+      }).map(([key, { label, type, icon }]) => (
+        <View key={key} style={styles.inputContainer}>
+          <View style={styles.inputWrapper}>
+            <Text style={styles.inputLabel}>{label}</Text>
+            <TextInput
+              style={styles.formInput}
+              placeholder={`Enter ${label.toLowerCase()}`}
+              value={String(formData[key as keyof Partial<Salesperson>] || "")}
+              onChangeText={(text: string) =>
+                setFormData({
+                  ...formData,
+                  [key]: type === "numeric" ? Number(text) : text,
+                })
+              }
+              keyboardType={type === "numeric" ? "numeric" : "default"}
+              placeholderTextColor="#999"
+            />
+          </View>
+        </View>
+      ))}
+      <TouchableOpacity
+        style={styles.submitButton}
+        onPress={onSubmit}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="save-outline" size={20} color="#fff" />
+        <Text style={styles.submitButtonText}>Save Changes</Text>
+      </TouchableOpacity>
+    </View>
+  )
+);
+
+
 const styles = StyleSheet.create({
+
+  emodalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)", 
+    justifyContent: "flex-end",
+  },
+  
+  emodalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: "90%",
+  },
+  emodalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  emodalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  ecloseButton: {
+    padding: 5,
+  },
+
+  editFormContainer: {
+    padding: 20,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    marginBottom: 12,
+    paddingHorizontal: 10,
+    backgroundColor: "#f9f9f9",
+  },
+  inputIcon: {
+    marginRight: 10,
+  },
+  inputWrapper: {
+    flex: 1,
+  },
+  inputLabel: {
+    fontSize: 12,
+    color: "#666",
+    marginBottom: 4,
+  },
+  formInput: {
+    backgroundColor: "#F5F5F5",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 16,
+  },
+  submitButton: {
+    flexDirection: "row",
+    backgroundColor: "#007bff",
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
+  },
+  submitButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+    marginLeft: 8,
+  },
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
