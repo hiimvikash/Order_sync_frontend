@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { set } from "zod";
 
 
 interface Entity {
@@ -163,6 +164,7 @@ const DistributorOrderCount = memo(() => {
 
     const [order, setOrder] = useState<Number>(-2);
     const [fetched, setfetched] = useState(false);
+    const [finalAmount, setFinalAmount] = useState<Number>(-2);
 
 
   // Enhanced API calls
@@ -206,7 +208,6 @@ const DistributorOrderCount = memo(() => {
   const isFormValid = () => {
     return (
       (formData.startDate?.trim() || "").length > 0 &&
-      (formData.productId ?? 0) !== 0 &&
       (formData.endDate?.trim() || "").length > 0 &&
       (formData.distributorId ?? 0) !== 0
     );
@@ -227,7 +228,20 @@ const DistributorOrderCount = memo(() => {
         Alert.alert("Authentication Error", "User not authenticated.");
         return;
       }
-      const res = await axios.post(
+
+      let res: any;
+      if(formData.productId === 0){
+        res = await axios.post(
+          `${process.env.EXPO_PUBLIC_API_URL}/admin/distributortotalamount`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+      }else{
+       res = await axios.post(
         `${process.env.EXPO_PUBLIC_API_URL}/admin/distributorOrderCount`,
         formData,
         {
@@ -236,8 +250,15 @@ const DistributorOrderCount = memo(() => {
           },
         }
       )
+    }
       console.log(res.data);
-      setOrder(res.data);
+      setOrder(res.data.finalQuantity);
+      if(res.data.finalAmount){
+        setFinalAmount(res.data.finalAmount);
+      }else{
+        setFinalAmount(0);
+      }
+
     } catch (error: any) {
       console.log(error);
       Alert.alert("Error", "Failed to add stock.");
@@ -262,6 +283,9 @@ const DistributorOrderCount = memo(() => {
     console.log("Updated FormData:", formData);
   }, [formData]);
 
+  useEffect(() => {
+    console.log(order, finalAmount)
+  },[order, finalAmount]);
 
 
   const handleStartDateChange = (event: any, selectedDate?: Date) => {
@@ -381,17 +405,13 @@ const DistributorOrderCount = memo(() => {
         </TouchableOpacity>
 
         {fetched && (
-                  <View style={styles.containery}>
-                    <Text style={styles.labely}>Order Dispatched</Text>
-                    <Text style={styles.stock}>{String(order)}</Text>
-                  </View>
-                )}
-
-
-
-
-      
-
+          <View style={styles.containery}>
+            <Text style={styles.labely}>Order Dispatched</Text>
+            <Text style={styles.stock}>{String(order)}</Text>
+            <Text style={styles.labely}>Order Amount</Text>
+            <Text style={styles.stock}>{String(finalAmount)}</Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

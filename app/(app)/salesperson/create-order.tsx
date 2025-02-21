@@ -500,7 +500,7 @@ const CreateOrder = () => {
             ...(item.variantId && { variantId: item.variantId }),
           })),
         };
-
+        console.log(submitData);
         // Make the API request
         await axios.post(
           `${process.env.EXPO_PUBLIC_API_URL}/salesperson/create-order`,

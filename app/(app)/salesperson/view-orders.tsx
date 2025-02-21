@@ -117,7 +117,7 @@ const SalespersonOrdersScreen = () => {
           },
         }
       );
-      // console.log(response.data[0].items);
+
       setOrders(response.data);
     } catch (error) {
       ToastAndroid.show("Failed to fetch orders", ToastAndroid.SHORT);
@@ -138,7 +138,6 @@ const SalespersonOrdersScreen = () => {
 
   const openModal = (order: Order) => {
     setSelectedOrder(order);
-
     setModalVisible(true);
   };
 

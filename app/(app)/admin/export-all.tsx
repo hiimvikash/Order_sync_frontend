@@ -58,6 +58,7 @@ export interface ProductInventory {
   reserve1: string;
   reserve2: string;
   reserve3: string;
+  unitPrice: number; // Add this line
 }
 
 export interface DistributorOrder {
@@ -363,22 +364,23 @@ const exportOrdersToXLSX = async () => {
         Alert.alert("Warning", "No inventory records to export.");
         return;
       }
-
+  
       if (!(await Sharing.isAvailableAsync())) {
         Alert.alert("Error", "Sharing is not available on this device.");
         return;
       }
-
+  
       const fileName = `ProductInventory_${new Date()
         .toLocaleDateString()
         .replace(/\//g, "-")}.xlsx`;
       const fileUri = FileSystem.cacheDirectory + fileName;
-
-      // Convert data to Excel format
+  
+      // Convert data to Excel format (Added 'Unit Price' column)
       const worksheetData = productInventory.map((product) => ({
         ID: product.id,
         "Product ID": product.productId,
         "Product Name": product.productName,
+        "Unit Price": product.unitPrice, // Added new column
         Quantity: product.quantity,
         "Created At": new Date(product.createdAt).toLocaleDateString(),
         "Updated At": new Date(product.updatedAt).toLocaleDateString(),
@@ -386,21 +388,21 @@ const exportOrdersToXLSX = async () => {
         "Reserve 2": product.reserve2,
         "Reserve 3": product.reserve3,
       }));
-
+  
       const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-
+  
       // Bold headers
       const headerKeys = Object.keys(worksheetData[0]);
       headerKeys.forEach((key, colIndex) => {
         const cell = worksheet[XLSX.utils.encode_cell({ r: 0, c: colIndex })];
         if (cell) cell.s = { font: { bold: true } };
       });
-
+  
       // Adjust column widths
       worksheet["!cols"] = headerKeys.map((key) => ({
         wpx: Math.min(200, key.length * 10),
       }));
-
+  
       // Apply borders & center alignment
       const range = worksheet["!ref"];
       if (range) {
@@ -424,19 +426,19 @@ const exportOrdersToXLSX = async () => {
       } else {
         console.error("Worksheet reference range not found");
       }
-
+  
       // Create workbook
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Product Inventory");
-
+  
       // Convert to base64
       const wbout = XLSX.write(workbook, { type: "base64", bookType: "xlsx" });
-
+  
       // Save file
       await FileSystem.writeAsStringAsync(fileUri, wbout, {
         encoding: FileSystem.EncodingType.Base64,
       });
-
+  
       // Share file
       await Sharing.shareAsync(fileUri, {
         mimeType:
@@ -444,7 +446,7 @@ const exportOrdersToXLSX = async () => {
         dialogTitle: "Export Product Inventory",
         UTI: "com.microsoft.excel.xlsx",
       });
-
+  
       // Cleanup file after sharing
       await FileSystem.deleteAsync(fileUri, { idempotent: true });
     } catch (error) {
@@ -455,6 +457,7 @@ const exportOrdersToXLSX = async () => {
       );
     }
   };
+  
 
   if (loading) {
     return (
@@ -551,38 +554,6 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     width: "100%",
   },
-
-  //   // Export Heading
-  //   exportHeading: {
-  //     fontSize: 18,
-  //     fontWeight: "bold",
-  //     textAlign: "center",
-  //     color: "#333",
-  //     marginBottom: 10,
-  //   },
-
-  //   // Export Button
-  //   exportButton: {
-  //     flexDirection: "row",
-  //     backgroundColor: "#007AFF",
-  //     paddingVertical: 14,
-  //     borderRadius: 10,
-  //     alignItems: "center",
-  //     justifyContent: "center",
-  //     marginTop: 5,
-  //     shadowColor: "#000",
-  //     shadowOffset: { width: 0, height: 2 },
-  //     shadowOpacity: 0.2,
-  //     shadowRadius: 3,
-  //     elevation: 4,
-  //   },
-
-  //   exportButtonText: {
-  //     color: "white",
-  //     fontSize: 16,
-  //     fontWeight: "bold",
-  //     marginLeft: 10,
-  //   },
 
   exportCard: {
     backgroundColor: "#fff",

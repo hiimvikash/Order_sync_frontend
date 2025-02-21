@@ -16,6 +16,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { set } from "zod";
 
 
 interface Entity {
@@ -27,12 +28,14 @@ interface ProductInventoryData {
   productId: number;
   productName: String;
   quantity: number;
+  unitPrice: number;
 }
 
 const INITIAL_FORM_STATE: ProductInventoryData = {
   productId: 0,
   productName: "",
   quantity: 0,
+  unitPrice: 0,
 };
 
 
@@ -149,6 +152,42 @@ const ProductInventory = memo(() => {
   const [loading, setLoading] = useState(false);
   const [submiting, setSubmiting] = useState(false);
 
+  const [unitPrice, setUnitPrice] = useState(0);
+  const [selectedProductId, setSelectedProductId] = useState(0);
+  const [lastPricefetched, setLastPriceFetched] = useState(false);
+
+
+  const fetchUnitPrice = async () => {
+    try {
+      if (selectedProductId === 0) {
+        Alert.alert("Error", "Please select a product first.");
+        return;
+      }
+      
+      const response = await axios.get(
+        `${process.env.EXPO_PUBLIC_API_URL}/admin/getLastUnitPrice/${selectedProductId}`
+      );
+
+      console.log(response.data);
+      if (response.status === 200) {
+        setUnitPrice(response.data.unitPrice);
+        setLastPriceFetched(true);
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        setLastPriceFetched(false);
+        Alert.alert("Warning", "No last unit price found for this product.");
+        return;
+      } else {
+        console.error("Error fetching unit price:", error);
+      }
+    }
+    finally {
+      
+    }
+  };
+
+
   // Enhanced API calls
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -177,13 +216,13 @@ const ProductInventory = memo(() => {
     return (
       (formData.productName?.trim() || "").length > 0 &&
       (formData.productId ?? 0) !== 0 &&
-      (formData.quantity ?? 0) !== 0 
+      (formData.quantity ?? 0) !== 0  &&
+      (formData.unitPrice ?? 0) !== 0 
     );
   };
 
     const handleSubmit = async () => {
         if (!isFormValid()) {
-
             Alert.alert('Validation Error', 'Please fill in all required fields.');
             return;
         }
@@ -224,6 +263,7 @@ const ProductInventory = memo(() => {
         if(field === 'productId') {
             const product = products.find((item) => item.id == value);
             if (product) {
+                setSelectedProductId(product.id);
                 setFormData((prev) => ({ ...prev, productId: product.id, productName: product.name }));
             }else{
                 Alert.alert('Error', 'Invalid Product');
@@ -233,6 +273,8 @@ const ProductInventory = memo(() => {
             setFormData((prev) => ({ ...prev, [field]: value }));
         }
     }
+
+    
     useEffect(() => {
         console.log("Updated FormData:", formData);
     }, [formData]);
@@ -276,6 +318,33 @@ const ProductInventory = memo(() => {
 
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>
+              Unit Price <Text style={styles.required}>*</Text>
+            </Text>
+          
+            <View style={styles.row}>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter Unit Price"
+          value={formData.unitPrice.toString()}
+          onChangeText={(text) => handleInputChange("unitPrice", text)}
+          keyboardType="numeric"
+          placeholderTextColor="#999"
+        />
+        <TouchableOpacity onPress={fetchUnitPrice} style={styles.refreshButton}>
+          <Ionicons name="refresh" size={24} color="white" />
+        </TouchableOpacity>
+        {lastPricefetched && (
+          <View style={styles.badge}>
+          <Text style={styles.badgeText}>Rs.{unitPrice}</Text>
+        </View>
+        )
+          }
+        
+      </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>
               Inventory Count <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
@@ -315,6 +384,19 @@ export default ProductInventory;
 
 const styles = StyleSheet.create({
 
+
+
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  refreshButton: {
+    backgroundColor: "#007AFF",
+    padding: 10,
+    borderRadius: 5,
+    marginLeft: 10,
+  },
     submitButton: {
         backgroundColor: '#007AFF',
         borderRadius: 10,
@@ -439,20 +521,15 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   badge: {
-    position: "absolute",
-    top: -4,
-    right: -4,
-    backgroundColor: "#FF3B30",
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 6,
+    backgroundColor: "#4287f5",
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    marginLeft: 10,
   },
   badgeText: {
-    color: "#FFF",
-    fontSize: 12,
+    color: "white",
+    fontSize: 14,
     fontWeight: "bold",
   },
   header: {
