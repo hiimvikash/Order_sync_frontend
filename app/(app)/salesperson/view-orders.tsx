@@ -14,12 +14,15 @@ import {
   Platform,
   ToastAndroid,
   Image,
+  Alert,
 } from "react-native";
 import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { formatProductName } from "@/hooks/formatProductName";
+import DateTimePicker from '@react-native-community/datetimepicker';
+
 
 type Product = {
   name: string;
@@ -75,6 +78,47 @@ const SalespersonOrdersScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+
+  const [startPickerVisible, setStartPickerVisible] = useState(false);
+    const [endPickerVisible, setEndPickerVisible] = useState(false);
+    const [startDate, setStartDate] = useState<string>('');
+    const [endDate, setEndDate] = useState<string>('');
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
+
+    const handleStartDateChange = (event: any, selectedDate?: Date) => {
+      setStartPickerVisible(false);
+      if (selectedDate) {
+        setStartDate(selectedDate.toISOString().split('T')[0]);
+      }
+    };
+  
+    const handleEndDateChange = (event: any, selectedDate?: Date) => {
+      setEndPickerVisible(false);
+      if (selectedDate) {
+        setEndDate(selectedDate.toISOString().split('T')[0]);
+      }
+    };
+
+    const filterOrdersByDate = () => {
+        if (!startDate || !endDate) {
+          Alert.alert('Warning', 'Please select both start and end dates.');
+          return;
+        }
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const filtered = orders.filter((order) => {
+          const orderDate = new Date(order.orderDate);
+          return orderDate >= start && orderDate <= end;
+        });
+        setFilteredOrders(filtered);
+      };
+    
+      const resetFilters = () => {
+        setStartDate('');
+        setEndDate('');
+        setFilteredOrders(orders);
+      };
+  
   const router = useRouter();
 
   const formatDate = (isoDateString: string) => {
@@ -119,6 +163,8 @@ const SalespersonOrdersScreen = () => {
       );
 
       setOrders(response.data);
+      setFilteredOrders(response.data);
+
     } catch (error) {
       ToastAndroid.show("Failed to fetch orders", ToastAndroid.SHORT);
     } finally {
@@ -411,8 +457,68 @@ const SalespersonOrdersScreen = () => {
         <Text style={styles.title}>Your Orders</Text>
       </View>
 
+      <View style={styles.filterSection}>
+        <View style={styles.dateContainer}>
+          <TouchableOpacity 
+            style={styles.dateButton}
+            onPress={() => setStartPickerVisible(true)}
+          >
+            <Ionicons name="calendar-outline" size={20} color="#007AFF" />
+            <Text style={styles.dateButtonText}>
+              {startDate || "Start Date"}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.dateButton}
+            onPress={() => setEndPickerVisible(true)}
+          >
+            <Ionicons name="calendar-outline" size={20} color="#007AFF" />
+            <Text style={styles.dateButtonText}>
+              {endDate || "End Date"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.filterButtons}>
+          <TouchableOpacity 
+            style={[styles.button, styles.filterButton]} 
+            onPress={filterOrdersByDate}
+          >
+            <Ionicons name="search-outline" size={20} color="#fff" />
+            <Text style={styles.buttonText}>Filter</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.button, styles.resetButton]} 
+            onPress={resetFilters}
+          >
+            <Ionicons name="refresh-outline" size={20} color="#fff" />
+            <Text style={styles.buttonText}>Reset</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {startPickerVisible && (
+        <DateTimePicker
+          value={startDate ? new Date(startDate) : new Date()}
+          mode="date"
+          display="default"
+          onChange={handleStartDateChange}
+        />
+      )}
+
+      {endPickerVisible && (
+        <DateTimePicker
+          value={endDate ? new Date(endDate) : new Date()}
+          mode="date"
+          display="default"
+          onChange={handleEndDateChange}
+        />
+      )}
+
       <FlatList
-        data={orders}
+        data={filteredOrders}
         renderItem={renderOrderItem}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.list}
@@ -428,6 +534,57 @@ const SalespersonOrdersScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  buttonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 8,
+},
+  filterSection: {
+    backgroundColor: '#fff',
+    padding: 16,
+    elevation: 2,
+    marginBottom: 8,
+},
+dateContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+},
+dateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    padding: 12,
+    borderRadius: 8,
+    flex: 0.48,
+},
+dateButtonText: {
+    marginLeft: 8,
+    color: '#333',
+    fontSize: 14,
+},
+filterButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+},
+button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 8,
+    elevation: 1,
+},
+filterButton: {
+    backgroundColor: '#007AFF',
+    flex: 0.48,
+},
+resetButton: {
+    backgroundColor: '#FF3B30',
+    flex: 0.48,
+},
   container: {
     backgroundColor: "#F5F5F5",
     flex: 1,
