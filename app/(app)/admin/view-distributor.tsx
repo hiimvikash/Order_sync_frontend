@@ -188,28 +188,26 @@ const ViewDistributor = () => {
 
       {/* Modal for Distributor Details */}
       {selectedDistributor && (
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={closeModal}
-        >
+        <Modal animationType="fade" transparent={true} visible={modalVisible} onRequestClose={closeModal}>
+        <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
-                <Ionicons name="close" size={24} color="black" />
-              </TouchableOpacity>
-              <Text style={styles.modalTitle}>Distributor Details</Text>
-              {selectedDistributor && Object.entries(selectedDistributor).map(([key, value]) => (
-                <Text key={key} style={styles.modalDetail}>
-                  {`${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}`}
-                </Text>
+            <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
+              <Ionicons name="close" size={28} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Distributor Details</Text>
+            <ScrollView style={styles.detailsContainer}>
+              {selectedDistributor && Object.entries(selectedDistributor)
+              .filter(([key]) => key !== "password" && key !== "createdAt" && key !== "updatedAt" && key !== "imageUrl")
+              .map(([key, value]) => (
+                <View key={key} style={styles.detailRow}>
+                  <Text style={styles.detailKey}>{key.charAt(0).toUpperCase() + key.slice(1)}:</Text>
+                  <Text style={styles.detailValue}>{String(value)}</Text>
+                </View>
               ))}
-              {/* Additional details can be shown here */}
-            </View>
+            </ScrollView>
           </View>
-        </Modal>
-
+        </View>
+      </Modal>
 
 )}
 {/* // edit modal */}
@@ -304,6 +302,66 @@ const EditForm = memo(
 );
 
 const styles = StyleSheet.create({
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: "85%",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  closeButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    padding: 8,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#333",
+  },
+  detailsContainer: {
+    width: "100%",
+    maxHeight: 300,
+  },
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+  },
+  detailKey: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#444",
+  },
+  detailValue: {
+    fontSize: 16,
+    color: "#666",
+  },
+
+
+
+
+
+
+
+
+
+
 
   emodalContainer: {
     flex: 1,
@@ -453,28 +511,28 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 18,
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
-  },
+  // modalContainer: {
+  //   flex: 1,
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  //   backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+  // },
   modalContent: {
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     padding: 20,
     width: '80%', // Modal width
   },
-  closeButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 15,
-  },
+  // closeButton: {
+  //   position: 'absolute',
+  //   top: 10,
+  //   right: 10,
+  // },
+  // modalTitle: {
+  //   fontSize: 20,
+  //   fontWeight: 'bold',
+  //   marginBottom: 15,
+  // },
   modalDetail: {
     fontSize: 16,
     color: '#333333',
